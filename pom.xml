@@ -11,12 +11,14 @@
 	</parent>
 	<groupId>com.ciros</groupId>
 	<artifactId>authorizer</artifactId>
-	<version>0.5.4</version>
+	<version>0.5.6</version>
 	<name>authorizer</name>
-	<description>annotation for custom method authorization</description>
+	<description>incoming HTTP requests authorizer through method-level annotation</description>
 	<properties>
 		<java.version>11</java.version>
 	</properties>
+	<url>https://github.com/ciros88/authorizer.git</url>
+
 	<dependencies>
 
 		<dependency>
@@ -48,6 +50,7 @@
 
 	<build>
 		<plugins>
+
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -73,6 +76,15 @@
 			</plugin>
 
 			<plugin>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<altDeploymentRepository>
+						internal.repo::default::file://${project.build.directory}/mvn-repo
+					</altDeploymentRepository>
+				</configuration>
+			</plugin>
+
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<executions>
@@ -85,8 +97,53 @@
 				</executions>
 			</plugin>
 
+			<plugin>
+				<groupId>com.github.github</groupId>
+				<artifactId>site-maven-plugin</artifactId>
+				<configuration>
+					<message>Maven artifacts for ${project.version}</message>
+					<noJekyll>true</noJekyll>
+					<outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>
+					<branch>refs/heads/mvn-repo</branch>
+					<includes>
+						<include>**/*</include>
+					</includes>
+					<merge>true</merge>
+					<repositoryName>authorizer</repositoryName>
+					<repositoryOwner>ciros88</repositoryOwner>
+					<server>github</server>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>site</goal>
+						</goals>
+						<phase>deploy</phase>
+					</execution>
+				</executions>
+			</plugin>
+
 		</plugins>
 	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>internal.repo</id>
+			<name>Temporary Staging Repository</name>
+			<url>file://${project.build.directory}/mvn-repo</url>
+		</repository>
+	</distributionManagement>
+
+	<repositories>
+		<repository>
+			<id>authorizer-mvn-repo</id>
+			<url>https://github.com/ciros88/authorizer.git/mvn-repo</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
+		</repository>
+	</repositories>
 
 </project>
 
