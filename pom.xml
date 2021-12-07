@@ -11,13 +11,13 @@
 	</parent>
 	<groupId>com.ciros</groupId>
 	<artifactId>authorizer</artifactId>
-	<version>0.5.6</version>
+	<version>0.5.7</version>
 	<name>authorizer</name>
 	<description>incoming HTTP requests authorizer through method-level annotation</description>
+	<url>https://github.com/ciros88/authorizer.git</url>
 	<properties>
 		<java.version>11</java.version>
 	</properties>
-	<url>https://github.com/ciros88/authorizer.git</url>
 
 	<dependencies>
 
@@ -133,17 +133,6 @@
 			<url>file://${project.build.directory}/mvn-repo</url>
 		</repository>
 	</distributionManagement>
-
-	<repositories>
-		<repository>
-			<id>authorizer-mvn-repo</id>
-			<url>https://github.com/ciros88/authorizer.git/mvn-repo</url>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-			</snapshots>
-		</repository>
-	</repositories>
 
 </project>
 
