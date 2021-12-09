@@ -2,7 +2,7 @@
 
 ### Typical scenario
 
-Useful when your microservices architecture already implements an authorization token validation service and filters forbidden HTTP requests through a gateway, but needs a lightweight way to implement authorization mechanism at method-level on every internal services (clients) trough a simple annotation, without having to rely on relatively heavy libraries (like Spring Security, Oauth stuff, etc)
+Useful when your microservices architecture already filters HTTP requests with invalid or expired authorization token, but needs a lightweight way to implement authorization mechanism at method-level on every internal services (clients) trough a simple annotation without having to rely on relatively heavy libraries (like Spring Security, Oauth stuff, etc)
 
 ### Maven dependency
 
