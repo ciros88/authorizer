@@ -45,7 +45,7 @@ import org.springframework.core.annotation.Order;
  * principal; any further subsequent attribute represent a subclass or attribute
  * of the obtained arg class and will accessed at execution time trough public
  * getters. The resulting required principal object obtained trough an
- * expression must be not null neither blank and must matches the
+ * expression must be not {@code null} neither blank and must matches the
  * {@link org.springframework.http.HttpHeaders#AUTHORIZATION AUTHORIZATION}
  * header claimed principal
  * </ul>
@@ -54,7 +54,6 @@ import org.springframework.core.annotation.Order;
  * ResponseStatusException} will be thrown with
  * {@link org.springframework.http.HttpHeaders#FORBIDDEN FORBIDDEN} status code.
  * <p>
- * {@link Authorize @Authorize} runs before Spring validation
  *
  * @author Ciro Scognamiglio
  *
