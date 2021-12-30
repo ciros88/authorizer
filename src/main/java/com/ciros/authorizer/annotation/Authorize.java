@@ -42,17 +42,18 @@ import org.springframework.core.annotation.Order;
  * neither contains two or more near dots. The first expression attribute will
  * be matched with any of the annotated method params: if there is a match the
  * corresponding arg (obtained at execution time) will be used as required
- * principal; any further subsequent attribute represent a subclass or attribute
- * of the obtained arg class and will accessed at execution time trough public
- * getters. The resulting required principal object obtained trough an
- * expression must be not {@code null} neither blank and must matches the
- * {@link org.springframework.http.HttpHeaders#AUTHORIZATION AUTHORIZATION}
- * header claimed principal
+ * principal; any further subsequent expression attribute will represent a
+ * subclass or attribute of the obtained arg class and will accessed at
+ * execution time trough public getters. The resulting required principal object
+ * obtained trough an expression must be not {@code null} neither blank and must
+ * matches the {@link org.springframework.http.HttpHeaders#AUTHORIZATION
+ * AUTHORIZATION} header claimed principal
  * </ul>
  * <p>
- * otherwise {@link org.springframework.web.server.ResponseStatusException
- * ResponseStatusException} will be thrown with
- * {@link org.springframework.http.HttpHeaders#FORBIDDEN FORBIDDEN} status code.
+ * otherwise a {@link org.springframework.web.server.ResponseStatusException
+ * ResponseStatusException} with
+ * {@link org.springframework.http.HttpHeaders#FORBIDDEN FORBIDDEN} status code
+ * and an access denied message will be thrown.
  * <p>
  *
  * @author Ciro Scognamiglio
@@ -64,10 +65,10 @@ import org.springframework.core.annotation.Order;
 @Documented
 public @interface Authorize {
 
-	String requiredPrincipal() default "";
+    String requiredPrincipal() default "";
 
-	String[] requiredAuthorities();
+    String[] requiredAuthorities();
 
-	boolean matchingAllRequiredAuthorities() default false;
+    boolean matchingAllRequiredAuthorities() default false;
 
 }
