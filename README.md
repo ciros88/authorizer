@@ -13,7 +13,7 @@ To utilize this library as a maven dependency add to your project's pom:
    <dependency>
       <groupId>com.ciros</groupId>
       <artifactId>authorizer</artifactId>
-      <version>0.5.6</version>
+      <version>${version}</version>
    </dependency>
 </dependencies>
 
@@ -28,3 +28,5 @@ To utilize this library as a maven dependency add to your project's pom:
    </repository>
 </repositories>
 ```
+
+see 'mvn-repo' branch for '${version}' values to choose from
