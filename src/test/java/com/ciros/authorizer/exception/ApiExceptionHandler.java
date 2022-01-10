@@ -1,5 +1,6 @@
 package com.ciros.authorizer.exception;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -18,7 +19,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AuthorizerException.class)
     public ResponseEntity<Object> handleAuthorizerException(AuthorizerException e) {
         log.warn(e.getLocalizedMessage());
-        return new ResponseEntity<Object>(e.getLocalizedMessage(), e.getStatusCode());
+        return new ResponseEntity<Object>(e.getLocalizedMessage(), HttpStatus.FORBIDDEN);
     }
 
 }
