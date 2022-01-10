@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.ciros</groupId>
 	<artifactId>authorizer</artifactId>
-	<version>0.5.11</version>
+	<version>0.5.12</version>
 	<name>authorizer</name>
 	<description>Incoming HTTP requests authorizer through method-level annotation with Spring Boot</description>
 	<url>https://github.com/ciros88/authorizer.git</url>
@@ -37,6 +37,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
 			<scope>test</scope>
 		</dependency>
 

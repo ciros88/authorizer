@@ -1,0 +1,106 @@
+{"properties": [
+  {
+    "name": "api.endpoint.get-with-empty-authority-required-matching-any",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-empty-authority-required-matching-all",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-blank-authority-required-matching-any",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-blank-authority-required-matching-all",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.base-path",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_1-required-matching-any",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_2-required-matching-any",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_1-and-AUTHORITY_2-required-matching-any",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_2-and-AUTHORITY_1-required-matching-any",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_1-required-matching-all",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_2-required-matching-all",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_1-and-AUTHORITY_2-required-matching-all",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_2-and-AUTHORITY_1-required-matching-all",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "authority-1",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "authority-2",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "principal",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_1-required-matching-any-with-empty-principal-required",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_1-required-matching-any-with-blank-principal-required",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_1-required-matching-any-with-principal-required",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_2-required-matching-any-with-principal-required",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_1-and-AUTHORITY_2-required-matching-any-with-principal-required",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_2-and-AUTHORITY_1-required-matching-any-with-principal-required",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_1-required-matching-all-with-principal-required",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_2-required-matching-all-with-principal-required",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_1-and-AUTHORITY_2-required-matching-all-with-principal-required",
+    "type": "java.lang.String"
+  },
+  {
+    "name": "api.endpoint.get-with-AUTHORITY_2-and-AUTHORITY_1-required-matching-all-with-principal-required",
+    "type": "java.lang.String"
+  }
+]}

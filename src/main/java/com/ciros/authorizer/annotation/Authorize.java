@@ -24,8 +24,8 @@ import org.springframework.core.annotation.Order;
  * {@link org.springframework.http.HttpHeaders#AUTHORIZATION AUTHORIZATION}
  * header claimed authorities. If {@link #matchingAllRequiredAuthorities()
  * matchingAllRequiredAuthorities} is true then all required authorities must
- * match claimed authorities, otherwise (default behavior) only one of them must
- * match the claimed ones
+ * match claimed authorities, otherwise (default behavior) is enough matching
+ * any of the required authorities
  * <li>an eventually provided {@link #requiredPrincipal() requiredPrincipal} is
  * not blank and matches the
  * {@link org.springframework.http.HttpHeaders#AUTHORIZATION AUTHORIZATION}
@@ -50,10 +50,8 @@ import org.springframework.core.annotation.Order;
  * AUTHORIZATION} header claimed principal
  * </ul>
  * <p>
- * otherwise a {@link org.springframework.web.server.ResponseStatusException
- * ResponseStatusException} with
- * {@link org.springframework.http.HttpHeaders#FORBIDDEN FORBIDDEN} status code
- * and an access denied message will be thrown.
+ * otherwise {@link com.ciros.authorizer.exception.AuthorizerException
+ * AuthorizerException} will be thrown
  * <p>
  *
  * @author Ciro Scognamiglio

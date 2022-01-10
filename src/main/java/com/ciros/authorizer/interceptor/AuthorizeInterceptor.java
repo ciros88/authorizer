@@ -11,11 +11,10 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.ciros.authorizer.annotation.Authorize;
+import com.ciros.authorizer.exception.AuthorizerException;
 import com.ciros.authorizer.model.AuthorizationHeaderDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,210 +30,197 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class AuthorizeInterceptor {
 
-	private static final String INVALID_EXPIRED_AUTH_ERROR = "Access denied: invalid or expired authorization";
+    private HttpServletRequest request;
 
-	private HttpServletRequest request;
+    public AuthorizeInterceptor(HttpServletRequest request) {
+        this.request = request;
+    }
 
-	public AuthorizeInterceptor(HttpServletRequest request) {
-		this.request = request;
-	}
+    @Around("@annotation(com.ciros.authorizer.annotation.Authorize)")
+    public Object authorize(final ProceedingJoinPoint joinPoint) throws Throwable {
 
-	@Around("@annotation(com.ciros.authorizer.annotation.Authorize)")
-	public Object authorize(final ProceedingJoinPoint joinPoint) throws Throwable {
+        final String authorizationHeaderJson = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-		final String authorizationHeaderJson = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authorizationHeaderJson == null || authorizationHeaderJson.isBlank()) {
+            // TODO "Missing or blank authorization header for request: %s",
+            // request.getRequestURI();
+            throw new AuthorizerException(String.format(
+                    "Missing or blank authorization header for request: [%s][%s][%s] from [%s]", request.getProtocol(),
+                    request.getMethod(), request.getRequestURL(), request.getRemoteAddr()));
+        }
 
-		if (authorizationHeaderJson == null || authorizationHeaderJson.isBlank()) {
-			log.warn("Missing or blank authorization header for request: {}", request.getRequestURI());
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-		}
+        log.info("Authorization header provided: {}", authorizationHeaderJson);
 
-		log.info("Authorization header provided: {}", authorizationHeaderJson);
+        final MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
+        final Method method = methodSignature.getMethod();
+        String requiredPrincipal = method.getAnnotation(Authorize.class).requiredPrincipal();
 
-		final MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-		final Method method = methodSignature.getMethod();
-		String requiredPrincipal = method.getAnnotation(Authorize.class).requiredPrincipal();
+        final boolean hasRequiredPrincipal = !requiredPrincipal.isEmpty();
 
-		final boolean hasRequiredPrincipal = !requiredPrincipal.isEmpty();
+        if (hasRequiredPrincipal && requiredPrincipal.isBlank())
+            throw new AuthorizerException("Required principal is blank");
 
-		if (hasRequiredPrincipal && requiredPrincipal.isBlank()) {
-			log.warn("Required principal is blank");
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-		}
+        if (hasRequiredPrincipal) {
+            if (requiredPrincipal.startsWith("#")) {
+                log.info("Required principal expression: {}", requiredPrincipal);
+                Object requiredPrincipalArg;
 
-		if (hasRequiredPrincipal) {
-			if (requiredPrincipal.startsWith("#")) {
-				log.info("Required principal expression: {}", requiredPrincipal);
-				Object requiredPrincipalArg;
-				try {
-					requiredPrincipalArg = getRequiredPrincipalFromExpression(requiredPrincipal, joinPoint,
-							methodSignature);
-				} catch (IllegalArgumentException e) {
-					log.warn("Unable to process provided expression: {}", e.getMessage());
-					throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-				}
-				if (requiredPrincipalArg.toString().isBlank()) {
-					log.warn("Required principal is blank");
-					throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-				}
-				requiredPrincipal = requiredPrincipalArg.toString();
-			}
-			log.info("Required principal: {}", requiredPrincipal);
-		} else
-			log.info("Required principal not provided");
+                try {
+                    requiredPrincipalArg = getRequiredPrincipalFromExpression(requiredPrincipal, joinPoint,
+                            methodSignature);
+                } catch (IllegalArgumentException e) {
+                    throw new AuthorizerException("Unable to process provided expression: " + e.getMessage());
+                }
 
-		final String[] requiredAuthorities = method.getAnnotation(Authorize.class).requiredAuthorities();
+                if (requiredPrincipalArg.toString().isBlank())
+                    throw new AuthorizerException("Required principal is blank");
 
-		if (requiredAuthorities.length == 0) {
-			log.warn("Required authorities are missing");
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-		}
+                requiredPrincipal = requiredPrincipalArg.toString();
+            }
+            log.info("Required principal: {}", requiredPrincipal);
+        } else
+            log.info("Required principal not provided");
 
-		for (String requiredAuthority : requiredAuthorities) {
-			if (requiredAuthority.isBlank()) {
-				log.warn("One or more required authorities are blank");
-				throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-			}
-		}
+        final String[] requiredAuthorities = method.getAnnotation(Authorize.class).requiredAuthorities();
 
-		log.info("Required authorities: {}", (Object) requiredAuthorities);
+        if (requiredAuthorities.length == 0)
+            throw new AuthorizerException("Required authorities are missing");
 
-		AuthorizationHeaderDto authorizationHeaderDto;
-		final ObjectMapper mapper = new ObjectMapper();
+        for (String requiredAuthority : requiredAuthorities)
+            if (requiredAuthority.isBlank())
+                throw new AuthorizerException("One or more required authorities are blank");
 
-		try {
-			authorizationHeaderDto = mapper.readValue(authorizationHeaderJson, AuthorizationHeaderDto.class);
-		} catch (JsonProcessingException e) {
-			log.warn("Unable to parse/decode/map authorization header: {}", e.getMessage());
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-		}
+        log.info("Required authorities: {}", (Object) requiredAuthorities);
 
-		if (hasRequiredPrincipal) {
+        AuthorizationHeaderDto authorizationHeaderDto;
+        final ObjectMapper mapper = new ObjectMapper();
 
-			final String principalClaimed = authorizationHeaderDto.getClaimedPrincipal();
+        try {
+            authorizationHeaderDto = mapper.readValue(authorizationHeaderJson, AuthorizationHeaderDto.class);
+        } catch (JsonProcessingException e) {
+            throw new AuthorizerException("Unable to parse/decode/map authorization header: " + e.getMessage());
+        }
 
-			if (principalClaimed.isBlank()) {
-				log.warn("Invalid authorization header: claimed principal is missing or blank");
-				throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-			}
+        if (hasRequiredPrincipal) {
 
-			log.info("Claimed principal: {}", principalClaimed);
+            final String principalClaimed = authorizationHeaderDto.getClaimedPrincipal();
 
-			if (!principalClaimed.equals(requiredPrincipal)) {
-				log.warn("Required principal <-> Claimed principal mismatch");
-				throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-			}
-		}
+            if (principalClaimed.isBlank())
+                throw new AuthorizerException("Invalid authorization header: claimed principal is missing or blank");
 
-		final Set<String> authoritiesClaimed = authorizationHeaderDto.getClaimedAuthorities();
-		authoritiesClaimed.remove("");
+            log.info("Claimed principal: {}", principalClaimed);
 
-		if (authoritiesClaimed.isEmpty()) {
-			log.warn("Invalid authorization header: missing claimed authorities");
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-		}
+            if (!principalClaimed.equals(requiredPrincipal))
+                throw new AuthorizerException("Required principal <-> Claimed principal mismatch");
 
-		log.info("Claimed authorities: {}", authoritiesClaimed);
+        }
 
-		final boolean matchingAllAuthorities = method.getAnnotation(Authorize.class).matchingAllRequiredAuthorities();
+        final Set<String> authoritiesClaimed = authorizationHeaderDto.getClaimedAuthorities();
 
-		log.info("Authorities matching policy: {}", matchingAllAuthorities ? "all" : "any");
+        if (authoritiesClaimed == null || authoritiesClaimed.isEmpty()
+                || authoritiesClaimed.stream().anyMatch(String::isBlank))
+            throw new AuthorizerException("Invalid authorization header: missing or blank claimed authorities");
 
-		if (matchingAllAuthorities) {
-			for (String requiredAuthority : requiredAuthorities) {
-				if (!authoritiesClaimed.contains(requiredAuthority)) {
-					log.warn("One or more required authorities not found among those claimed");
-					throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-				}
-			}
-		} else {
-			boolean hasMatched = false;
-			for (String requiredAuthority : requiredAuthorities) {
-				if (authoritiesClaimed.contains(requiredAuthority)) {
-					hasMatched = true;
-					break;
-				}
-			}
-			if (!hasMatched) {
-				log.warn("None of the required authorities found among those claimed");
-				throw new ResponseStatusException(HttpStatus.FORBIDDEN, INVALID_EXPIRED_AUTH_ERROR);
-			}
-		}
+        log.info("Claimed authorities: {}", authoritiesClaimed);
 
-		log.info("Successful authorization");
+        final boolean matchingAllRequiredAuthorities = method.getAnnotation(Authorize.class)
+                .matchingAllRequiredAuthorities();
 
-		return joinPoint.proceed();
-	}
+        log.info("Authorities matching policy: {}", matchingAllRequiredAuthorities ? "match all required authorities"
+                : "match any of the required authorities");
 
-	private Object getRequiredPrincipalFromExpression(final String expression, final ProceedingJoinPoint joinPoint,
-			MethodSignature methodSignature) throws IllegalArgumentException {
+        if (matchingAllRequiredAuthorities) {
+            for (String requiredAuthority : requiredAuthorities)
+                if (!authoritiesClaimed.contains(requiredAuthority))
+                    throw new AuthorizerException("One or more required authorities not found among those claimed");
 
-		final String[] expressionAttributes = parseExpressionGetAttributes(expression);
+        } else {
+            boolean hasMatched = false;
+            for (String requiredAuthority : requiredAuthorities) {
+                if (authoritiesClaimed.contains(requiredAuthority)) {
+                    hasMatched = true;
+                    break;
+                }
+            }
+            if (!hasMatched)
+                throw new AuthorizerException("None of the required authorities found among those claimed");
 
-		if (expressionAttributes.length == 0)
-			throw new IllegalArgumentException("Invalid expression");
+        }
 
-		final String[] parameterNames = methodSignature.getParameterNames();
+        log.info("Successful authorization");
 
-		int parameterPosition = -1;
+        return joinPoint.proceed();
+    }
 
-		for (int i = 0; i < parameterNames.length; i++) {
-			if (parameterNames[i].equals(expressionAttributes[0]))
-				parameterPosition = i;
-		}
+    private Object getRequiredPrincipalFromExpression(final String expression, final ProceedingJoinPoint joinPoint,
+            MethodSignature methodSignature) throws IllegalArgumentException {
 
-		if (parameterPosition == -1)
-			throw new IllegalArgumentException(String.format("Param '%s' not found", expressionAttributes[0]));
+        final String[] expressionAttributes = parseExpressionGetAttributes(expression);
 
-		Object requiredPrincipalArg = joinPoint.getArgs()[parameterPosition];
+        if (expressionAttributes.length == 0)
+            throw new IllegalArgumentException("Invalid expression");
 
-		if (requiredPrincipalArg == null || requiredPrincipalArg.toString().isBlank())
-			throw new IllegalArgumentException("Required principal is null or blank");
+        final String[] parameterNames = methodSignature.getParameterNames();
 
-		if (expressionAttributes.length < 2)
-			return requiredPrincipalArg;
+        int parameterPosition = -1;
 
-		for (int i = 1; i < expressionAttributes.length; i++) {
-			requiredPrincipalArg = getValueByGetterInvocation(requiredPrincipalArg, expressionAttributes[i]);
-			if (requiredPrincipalArg == null)
-				throw new IllegalArgumentException("Required principal is null");
-		}
-		return requiredPrincipalArg;
-	}
+        for (int i = 0; i < parameterNames.length; i++) {
+            if (parameterNames[i].equals(expressionAttributes[0]))
+                parameterPosition = i;
+        }
 
-	private Object getValueByGetterInvocation(final Object obj, final String argName) throws IllegalArgumentException {
+        if (parameterPosition == -1)
+            throw new IllegalArgumentException(String.format("Param '%s' not found", expressionAttributes[0]));
 
-		try {
+        Object requiredPrincipalArg = joinPoint.getArgs()[parameterPosition];
 
-			final Method method = obj.getClass()
-					.getMethod("get" + argName.substring(0, 1).toUpperCase() + argName.substring(1));
+        if (requiredPrincipalArg == null || requiredPrincipalArg.toString().isBlank())
+            throw new IllegalArgumentException("Required principal is null or blank");
 
-			return method.invoke(obj);
+        if (expressionAttributes.length < 2)
+            return requiredPrincipalArg;
 
-		} catch (NoSuchMethodException e) {
-			throw new IllegalArgumentException(
-					String.format("Method '%s' does not exists or is not public", e.getMessage()));
-		} catch (SecurityException | IllegalAccessException | InvocationTargetException e) {
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
+        for (int i = 1; i < expressionAttributes.length; i++) {
+            requiredPrincipalArg = getValueByGetterInvocation(requiredPrincipalArg, expressionAttributes[i]);
+            if (requiredPrincipalArg == null)
+                throw new IllegalArgumentException("Required principal is null");
+        }
+        return requiredPrincipalArg;
+    }
 
-	private String[] parseExpressionGetAttributes(String expression) {
+    private Object getValueByGetterInvocation(final Object obj, final String argName) throws IllegalArgumentException {
 
-		expression = expression.substring(1);
+        try {
 
-		if (expression.endsWith("."))
-			return new String[0];
+            final Method method = obj.getClass()
+                    .getMethod("get" + argName.substring(0, 1).toUpperCase() + argName.substring(1));
 
-		final String[] splittedExpression = expression.split("\\.");
+            return method.invoke(obj);
 
-		if (splittedExpression.length == 0)
-			return new String[0];
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException(
+                    String.format("Method '%s' does not exists or is not public", e.getMessage()));
+        } catch (SecurityException | IllegalAccessException | InvocationTargetException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+    }
 
-		for (String element : splittedExpression)
-			if (element.isBlank())
-				return new String[0];
+    private String[] parseExpressionGetAttributes(String expression) {
 
-		return splittedExpression;
-	}
+        expression = expression.substring(1);
+
+        if (expression.endsWith("."))
+            return new String[0];
+
+        final String[] splittedExpression = expression.split("\\.");
+
+        if (splittedExpression.length == 0)
+            return new String[0];
+
+        for (String element : splittedExpression)
+            if (element.isBlank())
+                return new String[0];
+
+        return splittedExpression;
+    }
 }

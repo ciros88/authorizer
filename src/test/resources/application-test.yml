@@ -1,0 +1,31 @@
+
+api:
+  base-path:  /api/v1/test
+
+  endpoint:
+    get-with-empty-authority-required-matching-any:                                       /emptyAuthorityRequiredMatchingAny
+    get-with-empty-authority-required-matching-all:                                       /emptyAuthorityRequiredMatchingAll
+    get-with-blank-authority-required-matching-any:                                       /blankAuthorityRequiredMatchingAny
+    get-with-blank-authority-required-matching-all:                                       /blankAuthorityRequiredMatchingAll
+    get-with-AUTHORITY_1-required-matching-any:                                           /AUTHORITY_1RequiredMatchingAny
+    get-with-AUTHORITY_2-required-matching-any:                                           /AUTHORITY_2RequiredMatchingAny
+    get-with-AUTHORITY_1-and-AUTHORITY_2-required-matching-any:                           /AUTHORITY_1AndAUTHORITY_2RequiredMatchingAny
+    get-with-AUTHORITY_2-and-AUTHORITY_1-required-matching-any:                           /AUTHORITY_2AndAUTHORITY_1RequiredMatchingAny
+    get-with-AUTHORITY_1-required-matching-all:                                           /AUTHORITY_1RequiredMatchingAll
+    get-with-AUTHORITY_2-required-matching-all:                                           /AUTHORITY_2RequiredMatchingAll
+    get-with-AUTHORITY_1-and-AUTHORITY_2-required-matching-all:                           /AUTHORITY_1AndAUTHORITY_2RequiredMatchingAll
+    get-with-AUTHORITY_2-and-AUTHORITY_1-required-matching-all:                           /AUTHORITY_2AndAUTHORITY_1RequiredMatchingAll
+    get-with-AUTHORITY_1-required-matching-any-with-empty-principal-required:             /AUTHORITY_1RequiredMatchingAnyEmptyPrincipalRequired
+    get-with-AUTHORITY_1-required-matching-any-with-blank-principal-required:             /AUTHORITY_1RequiredMatchingAnyBlankPrincipalRequired
+    get-with-AUTHORITY_1-required-matching-any-with-principal-required:                   /AUTHORITY_1RequiredMatchingAnyPrincipalRequired
+    get-with-AUTHORITY_2-required-matching-any-with-principal-required:                   /AUTHORITY_2RequiredMatchingAnyPrincipalRequired
+    get-with-AUTHORITY_1-and-AUTHORITY_2-required-matching-any-with-principal-required:   /AUTHORITY_1AndAUTHORITY_2RequiredMatchingAnyPrincipalRequired
+    get-with-AUTHORITY_2-and-AUTHORITY_1-required-matching-any-with-principal-required:   /AUTHORITY_2AndAUTHORITY_1RequiredMatchingAnyPrincipalRequired
+    get-with-AUTHORITY_1-required-matching-all-with-principal-required:                   /AUTHORITY_1RequiredMatchingAllPrincipalRequired
+    get-with-AUTHORITY_2-required-matching-all-with-principal-required:                   /AUTHORITY_2RequiredMatchingAllPrincipalRequired
+    get-with-AUTHORITY_1-and-AUTHORITY_2-required-matching-all-with-principal-required:   /AUTHORITY_1AndAUTHORITY_2RequiredMatchingAllPrincipalRequired
+    get-with-AUTHORITY_2-and-AUTHORITY_1-required-matching-all-with-principal-required:   /AUTHORITY_2AndAUTHORITY_1RequiredMatchingAllPrincipalRequired
+    
+authority-1:    dummyAuthority1
+authority-2:    dummyAuthority2
+principal:      dummyPrincipal
