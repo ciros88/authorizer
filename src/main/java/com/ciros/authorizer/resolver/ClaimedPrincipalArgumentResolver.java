@@ -9,6 +9,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import com.ciros.authorizer.annotation.ClaimedPrincipal;
+import com.ciros.authorizer.exception.AuthorizationHeaderException;
 import com.ciros.authorizer.exception.ClaimedPrincipalArgumentResolverException;
 import com.ciros.authorizer.exception.ClaimedPrincipalValidationException;
 import com.ciros.authorizer.exception.UnmappableAuthorizationHeaderException;
@@ -39,7 +40,7 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
 
         try {
             authorizationHeaderJson = AuthorizerUtil.getAuthorizationHeaderFromRequest(request);
-        } catch (IllegalArgumentException e) {
+        } catch (AuthorizationHeaderException e) {
             // TODO "Missing or blank authorization header for request: %s",
             // request.getRequestURI();
             throw new ClaimedPrincipalArgumentResolverException(

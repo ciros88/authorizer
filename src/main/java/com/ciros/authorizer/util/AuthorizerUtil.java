@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class AuthorizerUtil {
 
     public static String getAuthorizationHeaderFromRequest(final HttpServletRequest request)
-            throws IllegalArgumentException {
+            throws AuthorizationHeaderException {
 
         final String authorizationHeaderJson = request.getHeader(HttpHeaders.AUTHORIZATION);
 
@@ -29,7 +29,8 @@ public class AuthorizerUtil {
 
     }
 
-    public static AuthorizationHeader mapAuthorizationHeaderFromJson(final String authorizationHeaderJson) {
+    public static AuthorizationHeader mapAuthorizationHeaderFromJson(final String authorizationHeaderJson)
+            throws UnmappableAuthorizationHeaderException {
 
         final AuthorizationHeader authorizationHeader;
         final ObjectMapper mapper = new ObjectMapper();
@@ -42,7 +43,8 @@ public class AuthorizerUtil {
         return authorizationHeader;
     }
 
-    public static void validateClaimedPrincipal(final String principalClaimed) {
+    public static void validateClaimedPrincipal(final String principalClaimed)
+            throws ClaimedPrincipalValidationException {
 
         if (principalClaimed == null || principalClaimed.isBlank())
             throw new ClaimedPrincipalValidationException("claimed principal is missing or blank");

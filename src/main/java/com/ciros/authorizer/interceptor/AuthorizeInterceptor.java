@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import com.ciros.authorizer.annotation.Authorize;
 import com.ciros.authorizer.exception.AuthorizationException;
+import com.ciros.authorizer.exception.AuthorizationHeaderException;
 import com.ciros.authorizer.exception.ClaimedPrincipalValidationException;
 import com.ciros.authorizer.exception.UnmappableAuthorizationHeaderException;
 import com.ciros.authorizer.model.AuthorizationHeader;
@@ -43,7 +44,7 @@ public class AuthorizeInterceptor {
 
         try {
             authorizationHeaderJson = AuthorizerUtil.getAuthorizationHeaderFromRequest(request);
-        } catch (IllegalArgumentException e) {
+        } catch (AuthorizationHeaderException e) {
             // TODO "Missing or blank authorization header for request: %s",
             // request.getRequestURI();
             throw new AuthorizationException(String.format("%s for request: [%s][%s][%s] from [%s]", e.getMessage(),
