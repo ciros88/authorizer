@@ -30,7 +30,4 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface ClaimedPrincipal {
-
-    String value() default "we";
-
 }
