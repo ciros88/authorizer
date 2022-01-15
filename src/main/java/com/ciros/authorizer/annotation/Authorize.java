@@ -17,8 +17,8 @@ import org.springframework.core.annotation.Order;
  * <ul>
  * <li>{@link org.springframework.http.HttpHeaders#AUTHORIZATION AUTHORIZATION}
  * header is present in the request as a JSON mappable to
- * {@link com.ciros.authorizer.model.AuthorizationHeaderDto
- * AuthorizationHeaderDto} with non-blank values and array entries
+ * {@link com.ciros.authorizer.model.AuthorizationHeader AuthorizationHeader}
+ * with non-blank values and array entries
  * <li>provided {@link #requiredAuthorities() requiredAuthorities} array is not
  * empty but contains non-blank entries that match
  * {@link org.springframework.http.HttpHeaders#AUTHORIZATION AUTHORIZATION}
@@ -37,8 +37,8 @@ import org.springframework.core.annotation.Order;
  * {@link org.springframework.web.bind.annotation.PathVariable @PathVariable}
  * arg or
  * {@link org.springframework.web.bind.annotation.RequestBody @RequestBody}
- * specific DTO attribute. A syntactically valid expression is formed by non
- * blank attributes separated by dots, it mustn't start or end with a dot
+ * specific DTO attribute. A syntactically valid expression is formed by
+ * non-blank attributes separated by dots, it mustn't start or end with a dot
  * neither contains two or more near dots. The first expression attribute will
  * be matched with any of the annotated method params: if there is a match the
  * corresponding arg (obtained at execution time) will be used as required
@@ -50,8 +50,8 @@ import org.springframework.core.annotation.Order;
  * AUTHORIZATION} header claimed principal
  * </ul>
  * <p>
- * otherwise {@link com.ciros.authorizer.exception.AuthorizerException
- * AuthorizerException} will be thrown
+ * otherwise {@link com.ciros.authorizer.exception.AuthorizationException
+ * AuthorizationException} will be thrown
  * <p>
  *
  * @author Ciro Scognamiglio

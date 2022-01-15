@@ -10,14 +10,14 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
 import com.ciros.authorizer.annotation.Authorize;
-import com.ciros.authorizer.exception.AuthorizerException;
-import com.ciros.authorizer.model.AuthorizationHeaderDto;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ciros.authorizer.exception.AuthorizationException;
+import com.ciros.authorizer.exception.ClaimedPrincipalValidationException;
+import com.ciros.authorizer.exception.UnmappableAuthorizationHeaderException;
+import com.ciros.authorizer.model.AuthorizationHeader;
+import com.ciros.authorizer.util.AuthorizerUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,14 +39,15 @@ public class AuthorizeInterceptor {
     @Around("@annotation(com.ciros.authorizer.annotation.Authorize)")
     public Object authorize(final ProceedingJoinPoint joinPoint) throws Throwable {
 
-        final String authorizationHeaderJson = request.getHeader(HttpHeaders.AUTHORIZATION);
+        final String authorizationHeaderJson;
 
-        if (authorizationHeaderJson == null || authorizationHeaderJson.isBlank()) {
+        try {
+            authorizationHeaderJson = AuthorizerUtil.getAuthorizationHeaderFromRequest(request);
+        } catch (IllegalArgumentException e) {
             // TODO "Missing or blank authorization header for request: %s",
             // request.getRequestURI();
-            throw new AuthorizerException(String.format(
-                    "Missing or blank authorization header for request: [%s][%s][%s] from [%s]", request.getProtocol(),
-                    request.getMethod(), request.getRequestURL(), request.getRemoteAddr()));
+            throw new AuthorizationException(String.format("%s for request: [%s][%s][%s] from [%s]", e.getMessage(),
+                    request.getProtocol(), request.getMethod(), request.getRequestURL(), request.getRemoteAddr()));
         }
 
         log.info("Authorization header provided: {}", authorizationHeaderJson);
@@ -58,7 +59,7 @@ public class AuthorizeInterceptor {
         final boolean hasRequiredPrincipal = !requiredPrincipal.isEmpty();
 
         if (hasRequiredPrincipal && requiredPrincipal.isBlank())
-            throw new AuthorizerException("Required principal is blank");
+            throw new AuthorizationException("Required principal is blank");
 
         if (hasRequiredPrincipal) {
             if (requiredPrincipal.startsWith("#")) {
@@ -69,11 +70,11 @@ public class AuthorizeInterceptor {
                     requiredPrincipalArg = getRequiredPrincipalFromExpression(requiredPrincipal, joinPoint,
                             methodSignature);
                 } catch (IllegalArgumentException e) {
-                    throw new AuthorizerException("Unable to process provided expression: " + e.getMessage());
+                    throw new AuthorizationException("Unable to process provided expression: " + e.getMessage());
                 }
 
                 if (requiredPrincipalArg.toString().isBlank())
-                    throw new AuthorizerException("Required principal is blank");
+                    throw new AuthorizationException("Required principal is blank");
 
                 requiredPrincipal = requiredPrincipalArg.toString();
             }
@@ -84,42 +85,43 @@ public class AuthorizeInterceptor {
         final String[] requiredAuthorities = method.getAnnotation(Authorize.class).requiredAuthorities();
 
         if (requiredAuthorities.length == 0)
-            throw new AuthorizerException("Required authorities are missing");
+            throw new AuthorizationException("Required authorities are missing");
 
         for (String requiredAuthority : requiredAuthorities)
             if (requiredAuthority.isBlank())
-                throw new AuthorizerException("One or more required authorities are blank");
+                throw new AuthorizationException("One or more required authorities are blank");
 
         log.info("Required authorities: {}", (Object) requiredAuthorities);
 
-        AuthorizationHeaderDto authorizationHeaderDto;
-        final ObjectMapper mapper = new ObjectMapper();
-
+        AuthorizationHeader authorizationHeader;
         try {
-            authorizationHeaderDto = mapper.readValue(authorizationHeaderJson, AuthorizationHeaderDto.class);
-        } catch (JsonProcessingException e) {
-            throw new AuthorizerException("Unable to parse/decode/map authorization header: " + e.getMessage());
+            authorizationHeader = AuthorizerUtil.mapAuthorizationHeaderFromJson(authorizationHeaderJson);
+        } catch (UnmappableAuthorizationHeaderException e) {
+            throw new AuthorizationException(e.getMessage());
         }
 
         if (hasRequiredPrincipal) {
 
-            final String principalClaimed = authorizationHeaderDto.getClaimedPrincipal();
+            final String principalClaimed = authorizationHeader.getClaimedPrincipal();
 
-            if (principalClaimed.isBlank())
-                throw new AuthorizerException("Invalid authorization header: claimed principal is missing or blank");
+            try {
+                AuthorizerUtil.validateClaimedPrincipal(principalClaimed);
+            } catch (ClaimedPrincipalValidationException e) {
+                throw new AuthorizationException("Invalid authorization header: " + e.getMessage());
+            }
 
             log.info("Claimed principal: {}", principalClaimed);
 
             if (!principalClaimed.equals(requiredPrincipal))
-                throw new AuthorizerException("Required principal <-> Claimed principal mismatch");
+                throw new AuthorizationException("Required principal <-> Claimed principal mismatch");
 
         }
 
-        final Set<String> authoritiesClaimed = authorizationHeaderDto.getClaimedAuthorities();
+        final Set<String> authoritiesClaimed = authorizationHeader.getClaimedAuthorities();
 
         if (authoritiesClaimed == null || authoritiesClaimed.isEmpty()
                 || authoritiesClaimed.stream().anyMatch(String::isBlank))
-            throw new AuthorizerException("Invalid authorization header: missing or blank claimed authorities");
+            throw new AuthorizationException("Invalid authorization header: missing or blank claimed authorities");
 
         log.info("Claimed authorities: {}", authoritiesClaimed);
 
@@ -132,7 +134,7 @@ public class AuthorizeInterceptor {
         if (matchingAllRequiredAuthorities) {
             for (String requiredAuthority : requiredAuthorities)
                 if (!authoritiesClaimed.contains(requiredAuthority))
-                    throw new AuthorizerException("One or more required authorities not found among those claimed");
+                    throw new AuthorizationException("One or more required authorities not found among those claimed");
 
         } else {
             boolean hasMatched = false;
@@ -143,7 +145,7 @@ public class AuthorizeInterceptor {
                 }
             }
             if (!hasMatched)
-                throw new AuthorizerException("None of the required authorities found among those claimed");
+                throw new AuthorizationException("None of the required authorities found among those claimed");
 
         }
 

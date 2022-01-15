@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class AuthorizationHeaderDto {
+public final class AuthorizationHeader {
 
-	private String claimedPrincipal;
-	private Set<String> claimedAuthorities;
+    private String claimedPrincipal;
+    private Set<String> claimedAuthorities;
 
 }
