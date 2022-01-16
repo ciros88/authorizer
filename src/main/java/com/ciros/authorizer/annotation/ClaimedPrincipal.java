@@ -10,8 +10,8 @@ import java.lang.annotation.Target;
  * <h3>Binds claimed principal to Spring controller method parameter</h3>
  * <p>
  * Retrieve claimed principal from an HTTP request and binds it to a Spring
- * controller method parameter annotated with
- * {@link ClaimedPrincipal @ClaimedPrincipal} if:
+ * controller method parameter of type {@link java.lang.String String} annotated
+ * with {@link ClaimedPrincipal @ClaimedPrincipal} if:
  * <ul>
  * <li>{@link org.springframework.http.HttpHeaders#AUTHORIZATION AUTHORIZATION}
  * header with a non-blank claimed principal is present in the request as a JSON
@@ -19,8 +19,9 @@ import java.lang.annotation.Target;
  * AuthorizationHeader}
  * </ul>
  * <p>
- * otherwise {@link com.ciros.authorizer.exception.AuthorizationException
- * AuthorizationException} will be thrown
+ * otherwise
+ * {@link com.ciros.authorizer.exception.ClaimedPrincipalResolverException
+ * ClaimedPrincipalResolverException} will be thrown
  * <p>
  *
  * @author Ciro Scognamiglio

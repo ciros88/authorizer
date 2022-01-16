@@ -10,7 +10,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import com.ciros.authorizer.annotation.ClaimedPrincipal;
 import com.ciros.authorizer.exception.AuthorizationHeaderException;
-import com.ciros.authorizer.exception.ClaimedPrincipalArgumentResolverException;
+import com.ciros.authorizer.exception.ClaimedPrincipalResolverException;
 import com.ciros.authorizer.exception.ClaimedPrincipalValidationException;
 import com.ciros.authorizer.exception.UnmappableAuthorizationHeaderException;
 import com.ciros.authorizer.model.AuthorizationHeader;
@@ -41,7 +41,7 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
         try {
             authorizationHeaderJson = AuthorizerUtil.getAuthorizationHeaderFromRequest(request);
         } catch (AuthorizationHeaderException e) {
-            throw new ClaimedPrincipalArgumentResolverException(e.getMessage());
+            throw new ClaimedPrincipalResolverException(e.getMessage());
         }
 
         log.info("Authorization header provided: {}", authorizationHeaderJson);
@@ -50,7 +50,7 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
         try {
             authorizationHeader = AuthorizerUtil.mapAuthorizationHeaderFromJson(authorizationHeaderJson);
         } catch (UnmappableAuthorizationHeaderException e) {
-            throw new ClaimedPrincipalArgumentResolverException(e.getMessage());
+            throw new ClaimedPrincipalResolverException(e.getMessage());
         }
 
         final String principalClaimed = authorizationHeader.getClaimedPrincipal();
@@ -58,7 +58,7 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
         try {
             AuthorizerUtil.validateClaimedPrincipal(principalClaimed);
         } catch (ClaimedPrincipalValidationException e) {
-            throw new ClaimedPrincipalArgumentResolverException("Invalid authorization header: " + e.getMessage());
+            throw new ClaimedPrincipalResolverException("Invalid authorization header: " + e.getMessage());
         }
 
         log.info("Claimed principal: {}", principalClaimed);

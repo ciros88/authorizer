@@ -27,9 +27,10 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<Object>(ACCESS_DENIED_MESSAGE, HttpStatus.FORBIDDEN);
     }
 
-    @ExceptionHandler(ClaimedPrincipalArgumentResolverException.class)
+    @ExceptionHandler(ArgumentResolverException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseEntity<Object> handleAuthorizerResolverExceptions(RuntimeException e, ServletWebRequest request) {
+    public ResponseEntity<Object> handleAuthorizerArgumentResolverException(ArgumentResolverException e,
+            ServletWebRequest request) {
         log.error(e.getLocalizedMessage());
         return new ResponseEntity<Object>(GENERIC_INTERNAL_SERVER_ERROR_MESSAGE, HttpStatus.INTERNAL_SERVER_ERROR);
     }
