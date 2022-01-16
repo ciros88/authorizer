@@ -41,11 +41,7 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
         try {
             authorizationHeaderJson = AuthorizerUtil.getAuthorizationHeaderFromRequest(request);
         } catch (AuthorizationHeaderException e) {
-            // TODO "Missing or blank authorization header for request: %s",
-            // request.getRequestURI();
-            throw new ClaimedPrincipalArgumentResolverException(
-                    String.format("%s for request: [%s][%s][%s] from [%s]", e.getMessage(), request.getProtocol(),
-                            request.getMethod(), request.getRequestURL(), request.getRemoteAddr()));
+            throw new ClaimedPrincipalArgumentResolverException(e.getMessage());
         }
 
         log.info("Authorization header provided: {}", authorizationHeaderJson);

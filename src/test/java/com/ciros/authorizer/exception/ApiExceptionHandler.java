@@ -18,17 +18,20 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
+    private static final String ACCESS_DENIED_MESSAGE = "Access denied: invalid or expired authorization";
+    private static final String GENERIC_INTERNAL_SERVER_ERROR_MESSAGE = "An internal server error has occurred";
+
     @ExceptionHandler(AuthorizationException.class)
     public ResponseEntity<Object> handleAuthorizationException(AuthorizationException e) {
         log.warn(e.getLocalizedMessage());
-        return new ResponseEntity<Object>(e.getLocalizedMessage(), HttpStatus.FORBIDDEN);
+        return new ResponseEntity<Object>(ACCESS_DENIED_MESSAGE, HttpStatus.FORBIDDEN);
     }
 
-    @ExceptionHandler({ ClaimedPrincipalArgumentResolverException.class })
+    @ExceptionHandler(ClaimedPrincipalArgumentResolverException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<Object> handleAuthorizerResolverExceptions(RuntimeException e, ServletWebRequest request) {
-        log.warn(e.getLocalizedMessage());
-        return new ResponseEntity<Object>(e.getLocalizedMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        log.error(e.getLocalizedMessage());
+        return new ResponseEntity<Object>(GENERIC_INTERNAL_SERVER_ERROR_MESSAGE, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }
