@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.ciros</groupId>
 	<artifactId>authorizer</artifactId>
-	<version>0.5.17</version>
+	<version>0.5.18</version>
 	<name>authorizer</name>
 	<description>Incoming HTTP requests authorizer through method-level annotation with Spring Boot</description>
 	<url>https://github.com/ciros88/authorizer.git</url>
