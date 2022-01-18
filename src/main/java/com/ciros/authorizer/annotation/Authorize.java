@@ -24,8 +24,8 @@ import org.springframework.core.annotation.Order;
  * {@link org.springframework.http.HttpHeaders#AUTHORIZATION AUTHORIZATION}
  * header claimed authorities. If {@link #matchingAllRequiredAuthorities()
  * matchingAllRequiredAuthorities} is true then all required authorities must
- * match claimed authorities, otherwise (default behavior) is enough matching
- * any of the required authorities
+ * match claimed authorities, otherwise (default behavior) just matching any of
+ * the required authorities is enough
  * <li>an eventually provided {@link #requiredPrincipal() requiredPrincipal} is
  * not blank and matches the
  * {@link org.springframework.http.HttpHeaders#AUTHORIZATION AUTHORIZATION}

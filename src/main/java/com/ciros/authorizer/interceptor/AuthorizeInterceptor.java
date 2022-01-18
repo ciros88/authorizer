@@ -2,6 +2,7 @@ package com.ciros.authorizer.interceptor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,6 +41,8 @@ public class AuthorizeInterceptor {
     @Around("@annotation(com.ciros.authorizer.annotation.Authorize)")
     public Object authorize(final ProceedingJoinPoint joinPoint) throws Throwable {
 
+        // TODO conditional logging
+
         final String authorizationHeaderJson;
 
         try {
@@ -48,7 +51,9 @@ public class AuthorizeInterceptor {
             throw new AuthorizationException(e.getMessage());
         }
 
-        log.info("Authorization header provided: {}", authorizationHeaderJson);
+        final StringBuilder stringBuilder = new StringBuilder("Successful authorization:");
+        stringBuilder.append(System.lineSeparator()).append("Authorization header provided: ")
+                .append(authorizationHeaderJson);
 
         final MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         final Method method = methodSignature.getMethod();
@@ -61,7 +66,9 @@ public class AuthorizeInterceptor {
 
         if (hasRequiredPrincipal) {
             if (requiredPrincipal.startsWith("#")) {
-                log.info("Required principal expression: {}", requiredPrincipal);
+                stringBuilder.append(System.lineSeparator()).append("Required principal expression: ")
+                        .append(requiredPrincipal);
+
                 Object requiredPrincipalArg;
 
                 try {
@@ -76,9 +83,10 @@ public class AuthorizeInterceptor {
 
                 requiredPrincipal = requiredPrincipalArg.toString();
             }
-            log.info("Required principal: {}", requiredPrincipal);
+
+            stringBuilder.append(System.lineSeparator()).append("Required principal: ").append(requiredPrincipal);
         } else
-            log.info("Required principal not provided");
+            stringBuilder.append(System.lineSeparator()).append("Required principal not provided");
 
         final String[] requiredAuthorities = method.getAnnotation(Authorize.class).requiredAuthorities();
 
@@ -89,7 +97,8 @@ public class AuthorizeInterceptor {
             if (requiredAuthority.isBlank())
                 throw new AuthorizationException("One or more required authorities are blank");
 
-        log.info("Required authorities: {}", (Object) requiredAuthorities);
+        stringBuilder.append(System.lineSeparator()).append("Required authorities: ")
+                .append((List.of(requiredAuthorities)));
 
         AuthorizationHeader authorizationHeader;
         try {
@@ -108,7 +117,7 @@ public class AuthorizeInterceptor {
                 throw new AuthorizationException("Invalid authorization header: " + e.getMessage());
             }
 
-            log.info("Claimed principal: {}", principalClaimed);
+            stringBuilder.append(System.lineSeparator()).append("Claimed principal: ").append(principalClaimed);
 
             if (!principalClaimed.equals(requiredPrincipal))
                 throw new AuthorizationException("Required principal <-> Claimed principal mismatch");
@@ -118,16 +127,19 @@ public class AuthorizeInterceptor {
         final Set<String> authoritiesClaimed = authorizationHeader.getClaimedAuthorities();
 
         if (authoritiesClaimed == null || authoritiesClaimed.isEmpty()
-                || authoritiesClaimed.stream().anyMatch(String::isBlank))
+                || authoritiesClaimed.stream().anyMatch(String::isBlank)) // TODO avoid streams here
             throw new AuthorizationException("Invalid authorization header: missing or blank claimed authorities");
 
-        log.info("Claimed authorities: {}", authoritiesClaimed);
+        stringBuilder.append(System.lineSeparator()).append("Claimed authorities: ").append(authoritiesClaimed);
 
         final boolean matchingAllRequiredAuthorities = method.getAnnotation(Authorize.class)
                 .matchingAllRequiredAuthorities();
 
-        log.info("Authorities matching policy: {}", matchingAllRequiredAuthorities ? "match all required authorities"
-                : "match any of the required authorities");
+        //TODO Authorities matching policy:
+        //  [X] just match any of the required authorities, [ ] match all required authorities
+        stringBuilder.append(System.lineSeparator()).append("Authorities matching policy: ")
+                .append(matchingAllRequiredAuthorities ? "match all required authorities"
+                        : "just match any of the required authorities");
 
         if (matchingAllRequiredAuthorities) {
             for (String requiredAuthority : requiredAuthorities)
@@ -144,10 +156,9 @@ public class AuthorizeInterceptor {
             }
             if (!hasMatched)
                 throw new AuthorizationException("None of the required authorities found among those claimed");
-
         }
 
-        log.info("Successful authorization");
+        log.info(stringBuilder.toString());
 
         return joinPoint.proceed();
     }

@@ -34,6 +34,8 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
             NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
+        // TODO conditional logging
+
         final HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
 
         final String authorizationHeaderJson;
@@ -44,7 +46,9 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
             throw new ClaimedPrincipalResolverException(e.getMessage());
         }
 
-        log.info("Authorization header provided: {}", authorizationHeaderJson);
+        final StringBuilder stringBuilder = new StringBuilder("Claimed principal resolved:");
+        stringBuilder.append(System.lineSeparator()).append("Authorization header provided: ")
+                .append(authorizationHeaderJson);
 
         AuthorizationHeader authorizationHeader;
         try {
@@ -61,7 +65,9 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
             throw new ClaimedPrincipalResolverException("Invalid authorization header: " + e.getMessage());
         }
 
-        log.info("Claimed principal: {}", principalClaimed);
+        stringBuilder.append(System.lineSeparator()).append("Claimed principal: ").append(principalClaimed);
+
+        log.debug(stringBuilder.toString());
 
         return principalClaimed;
 
