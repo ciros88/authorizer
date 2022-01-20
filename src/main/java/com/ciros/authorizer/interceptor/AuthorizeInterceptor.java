@@ -135,8 +135,6 @@ public class AuthorizeInterceptor {
         final boolean matchingAllRequiredAuthorities = method.getAnnotation(Authorize.class)
                 .matchingAllRequiredAuthorities();
 
-        //TODO Authorities matching policy:
-        //  [X] just match any of the required authorities, [ ] match all required authorities
         stringBuilder.append(System.lineSeparator()).append("Authorities matching policy: ")
                 .append(matchingAllRequiredAuthorities ? "match all required authorities"
                         : "just match any of the required authorities");

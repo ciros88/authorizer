@@ -7,11 +7,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * <h3>Binds claimed principal to Spring controller method parameter</h3>
+ * <h3>Binds claimed principal to Spring controller mapping method
+ * parameter</h3>
  * <p>
  * Retrieve claimed principal from an HTTP request and binds it to a Spring
- * controller method parameter of type {@link java.lang.String String} annotated
- * with {@link ClaimedPrincipal @ClaimedPrincipal} if:
+ * controller mapping method parameter of type {@link java.lang.String String}
+ * annotated with {@link ClaimedPrincipal @ClaimedPrincipal} if:
  * <ul>
  * <li>{@link org.springframework.http.HttpHeaders#AUTHORIZATION AUTHORIZATION}
  * header with a non-blank claimed principal is present in the request as a JSON
