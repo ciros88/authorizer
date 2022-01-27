@@ -48,7 +48,7 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
         } catch (AuthorizationHeaderException | UnmappableAuthorizationHeaderException e) {
             throw new ClaimedPrincipalResolverException(e.getMessage());
         }
-        stringBuilder.append(System.lineSeparator()).append("Authorization header provided: ")
+        stringBuilder.append(System.lineSeparator()).append("Authorization header provided:\t")
                 .append(authorizationHeaderJson);
 
         final String principalClaimed = authorizationHeader.getClaimedPrincipal();
@@ -59,7 +59,7 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
             throw new ClaimedPrincipalResolverException(e.getMessage());
         }
 
-        stringBuilder.append(System.lineSeparator()).append("Claimed principal: ").append(principalClaimed);
+        stringBuilder.append(System.lineSeparator()).append("Claimed principal:\t\t").append(principalClaimed);
 
         log.debug(stringBuilder.toString());
 

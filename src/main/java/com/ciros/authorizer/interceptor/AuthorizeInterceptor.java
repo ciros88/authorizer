@@ -46,7 +46,7 @@ public class AuthorizeInterceptor {
         final StringBuilder stringBuilder = new StringBuilder("Successful authorization:");
 
         authorizationHeader = AuthorizerUtil.mapAuthorizationHeader(authorizationHeaderJson);
-        stringBuilder.append(System.lineSeparator()).append("Authorization header provided: ")
+        stringBuilder.append(System.lineSeparator()).append("Authorization header provided:\t")
                 .append(authorizationHeaderJson);
 
         final MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
@@ -73,18 +73,18 @@ public class AuthorizeInterceptor {
 
             AuthorizerUtil.validateClaimedPrincipal(principalClaimed);
 
-            stringBuilder.append(System.lineSeparator()).append("Claimed principal: ").append(principalClaimed);
+            stringBuilder.append(System.lineSeparator()).append("Claimed principal:\t\t").append(principalClaimed);
         }
 
         final Set<String> claimedAuthorities = authorizationHeader.getClaimedAuthorities();
 
         AuthorizerUtil.validateClaimedAuthorities(claimedAuthorities);
 
-        stringBuilder.append(System.lineSeparator()).append("Claimed authorities: ").append(claimedAuthorities);
+        stringBuilder.append(System.lineSeparator()).append("Claimed authorities:\t\t").append(claimedAuthorities);
 
         if (hasRequiredPrincipal) {
             if (requiredPrincipal.startsWith("#")) {
-                stringBuilder.append(System.lineSeparator()).append("Required principal expression: ")
+                stringBuilder.append(System.lineSeparator()).append("Required principal expression:\t")
                         .append(requiredPrincipal);
 
                 if (requiredPrincipal.equals("#authorization.claimedprincipal"))
@@ -107,7 +107,7 @@ public class AuthorizeInterceptor {
                 }
             }
 
-            stringBuilder.append(System.lineSeparator()).append("Required principal: ").append(requiredPrincipal);
+            stringBuilder.append(System.lineSeparator()).append("Required principal:\t\t").append(requiredPrincipal);
         } else
             stringBuilder.append(System.lineSeparator()).append("Required principal not provided");
 
@@ -115,7 +115,7 @@ public class AuthorizeInterceptor {
             if (requiredAuthority.isBlank())
                 throw new AuthorizationException("One or more required authorities are blank");
 
-        stringBuilder.append(System.lineSeparator()).append("Required authorities: ")
+        stringBuilder.append(System.lineSeparator()).append("Required authorities:\t\t")
                 .append((List.of(requiredAuthorities)));
 
         if (hasRequiredPrincipal && !principalClaimed.equals(requiredPrincipal))
@@ -124,7 +124,7 @@ public class AuthorizeInterceptor {
         final boolean matchingAllRequiredAuthorities = method.getAnnotation(Authorize.class)
                 .matchingAllRequiredAuthorities();
 
-        stringBuilder.append(System.lineSeparator()).append("Authorities matching policy: ")
+        stringBuilder.append(System.lineSeparator()).append("Authorities matching policy:\t")
                 .append(matchingAllRequiredAuthorities ? "match all required authorities"
                         : "just match any of the required authorities");
 

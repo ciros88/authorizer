@@ -31,7 +31,6 @@ public class RequiredRoleInterceptor {
     @Around("@annotation(com.ciros.authorizer.annotation.RequiredRole)")
     public Object authorizeByRequiredRole(final ProceedingJoinPoint joinPoint) throws Throwable {
 
-        
         final MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         final Method method = methodSignature.getMethod();
         final String requiredRole = method.getAnnotation(RequiredRole.class).value();
@@ -65,13 +64,18 @@ public class RequiredRoleInterceptor {
 
         final StringBuilder stringBuilder = new StringBuilder("Successful authorization:");
 
-        stringBuilder.append(System.lineSeparator())
-                .append(REQUIRED_ANNOTATION + "annotation found on type String parameter: '" + parameterName + "'");
+        stringBuilder.append(System.lineSeparator()).append("Annotation '" + REQUIRED_ANNOTATION
+                + "' found on type String method parameter '" + parameterName + "'");
+
+        if (requiredRole.isBlank())
+            throw new AuthorizationException("Required role is blank");
+
+        stringBuilder.append(System.lineSeparator()).append("Required role:\t" + requiredRole);
 
         if (claimedRole == null || claimedRole.isBlank())
             throw new AuthorizationException("Claimed role is missing or blank");
 
-        stringBuilder.append(System.lineSeparator()).append("Claimed role: " + claimedRole);
+        stringBuilder.append(System.lineSeparator()).append("Claimed role:\t" + claimedRole);
 
         if (!claimedRole.equals(requiredRole))
             throw new AuthorizationException("Required role <-> Claimed role mismatch");
