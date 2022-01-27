@@ -118,12 +118,8 @@ public class AuthorizeInterceptor {
         stringBuilder.append(System.lineSeparator()).append("Required authorities: ")
                 .append((List.of(requiredAuthorities)));
 
-        if (hasRequiredPrincipal) {
-
-            if (!principalClaimed.equals(requiredPrincipal))
-                throw new AuthorizationException("Required principal <-> Claimed principal mismatch");
-
-        }
+        if (hasRequiredPrincipal && !principalClaimed.equals(requiredPrincipal))
+            throw new AuthorizationException("Required principal <-> Claimed principal mismatch");
 
         final boolean matchingAllRequiredAuthorities = method.getAnnotation(Authorize.class)
                 .matchingAllRequiredAuthorities();
@@ -200,9 +196,7 @@ public class AuthorizeInterceptor {
             return method.invoke(obj);
 
         } catch (NoSuchMethodException e) {
-            // TODO la e.getMessage???
-            throw new IllegalArgumentException(
-                    String.format("Method '%s' does not exists or is not public", e.getMessage()));
+            throw new IllegalArgumentException("Method '" + e.getMessage() + "' does not exists or is not public");
         } catch (SecurityException | IllegalAccessException | InvocationTargetException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
