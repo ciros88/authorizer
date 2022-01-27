@@ -1,10 +1,9 @@
 package com.ciros.authorizer.util;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.springframework.http.HttpHeaders;
+import java.util.Set;
 
 import com.ciros.authorizer.exception.AuthorizationHeaderException;
+import com.ciros.authorizer.exception.ClaimedAuthoritiesValidationException;
 import com.ciros.authorizer.exception.ClaimedPrincipalValidationException;
 import com.ciros.authorizer.exception.UnmappableAuthorizationHeaderException;
 import com.ciros.authorizer.model.AuthorizationHeader;
@@ -17,19 +16,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AuthorizerUtil {
 
-    public static String getAuthorizationHeaderFromRequest(final HttpServletRequest request)
-            throws AuthorizationHeaderException {
+    public static AuthorizationHeader mapAuthorizationHeader(final String authorizationHeader)
+            throws AuthorizationHeaderException, UnmappableAuthorizationHeaderException {
+        validateJsonAuthorizationHeader(authorizationHeader);
+        return mapAuthorizationHeaderFromJson(authorizationHeader);
+    }
 
-        final String authorizationHeaderJson = request.getHeader(HttpHeaders.AUTHORIZATION);
+    private static void validateJsonAuthorizationHeader(final String authorizationHeaderJson)
+            throws AuthorizationHeaderException {
 
         if (authorizationHeaderJson == null || authorizationHeaderJson.isBlank())
             throw new AuthorizationHeaderException("Missing or blank authorization header");
 
-        return authorizationHeaderJson;
-
     }
 
-    public static AuthorizationHeader mapAuthorizationHeaderFromJson(final String authorizationHeaderJson)
+    private static AuthorizationHeader mapAuthorizationHeaderFromJson(final String authorizationHeaderJson)
             throws UnmappableAuthorizationHeaderException {
 
         final AuthorizationHeader authorizationHeader;
@@ -47,7 +48,19 @@ public class AuthorizerUtil {
             throws ClaimedPrincipalValidationException {
 
         if (principalClaimed == null || principalClaimed.isBlank())
-            throw new ClaimedPrincipalValidationException("claimed principal is missing or blank");
+            throw new ClaimedPrincipalValidationException("Claimed principal is missing or blank");
+
+    }
+
+    public static void validateClaimedAuthorities(final Set<String> authoritiesClaimed)
+            throws ClaimedAuthoritiesValidationException {
+
+        if (authoritiesClaimed == null || authoritiesClaimed.isEmpty())
+            throw new ClaimedAuthoritiesValidationException("Claimed authorities are missing");
+
+        for (String authorityClaimed : authoritiesClaimed)
+            if (authorityClaimed.isBlank())
+                throw new ClaimedAuthoritiesValidationException("One or more claimed authorities are blank");
 
     }
 

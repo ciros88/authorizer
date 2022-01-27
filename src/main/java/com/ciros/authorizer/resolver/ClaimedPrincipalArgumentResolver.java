@@ -3,6 +3,7 @@ package com.ciros.authorizer.resolver;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -38,31 +39,24 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
 
         final HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
 
-        final String authorizationHeaderJson;
+        final String authorizationHeaderJson = request.getHeader(HttpHeaders.AUTHORIZATION);
+        AuthorizationHeader authorizationHeader;
+        final StringBuilder stringBuilder = new StringBuilder("Claimed principal resolved:");
 
         try {
-            authorizationHeaderJson = AuthorizerUtil.getAuthorizationHeaderFromRequest(request);
-        } catch (AuthorizationHeaderException e) {
+            authorizationHeader = AuthorizerUtil.mapAuthorizationHeader(authorizationHeaderJson);
+        } catch (AuthorizationHeaderException | UnmappableAuthorizationHeaderException e) {
             throw new ClaimedPrincipalResolverException(e.getMessage());
         }
-
-        final StringBuilder stringBuilder = new StringBuilder("Claimed principal resolved:");
         stringBuilder.append(System.lineSeparator()).append("Authorization header provided: ")
                 .append(authorizationHeaderJson);
-
-        AuthorizationHeader authorizationHeader;
-        try {
-            authorizationHeader = AuthorizerUtil.mapAuthorizationHeaderFromJson(authorizationHeaderJson);
-        } catch (UnmappableAuthorizationHeaderException e) {
-            throw new ClaimedPrincipalResolverException(e.getMessage());
-        }
 
         final String principalClaimed = authorizationHeader.getClaimedPrincipal();
 
         try {
             AuthorizerUtil.validateClaimedPrincipal(principalClaimed);
         } catch (ClaimedPrincipalValidationException e) {
-            throw new ClaimedPrincipalResolverException("Invalid authorization header: " + e.getMessage());
+            throw new ClaimedPrincipalResolverException(e.getMessage());
         }
 
         stringBuilder.append(System.lineSeparator()).append("Claimed principal: ").append(principalClaimed);

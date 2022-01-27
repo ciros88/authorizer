@@ -4,11 +4,11 @@ package com.ciros.authorizer.exception;
  * @author Ciro Scognamiglio
  */
 
-public class AuthorizationHeaderException extends AuthorizationException {
+public class ClaimedAuthoritiesValidationException extends AuthorizationException {
 
     private static final long serialVersionUID = 1L;
 
-    public AuthorizationHeaderException(String message) {
+    public ClaimedAuthoritiesValidationException(String message) {
         super(message);
     }
 

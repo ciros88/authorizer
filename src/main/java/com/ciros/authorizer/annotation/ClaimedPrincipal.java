@@ -20,9 +20,9 @@ import java.lang.annotation.Target;
  * AuthorizationHeader}
  * </ul>
  * <p>
- * otherwise
- * {@link com.ciros.authorizer.exception.ClaimedPrincipalResolverException
- * ClaimedPrincipalResolverException} will be thrown
+ * otherwise an exception of type
+ * {@link com.ciros.authorizer.exception.ArgumentResolverException
+ * ArgumentResolverException} (or a subclass of it) will be thrown
  * <p>
  *
  * @author Ciro Scognamiglio

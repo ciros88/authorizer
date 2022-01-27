@@ -6,9 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-
 /**
  * <h3>Authorize HTTP requests</h3>
  * <p>
@@ -50,8 +47,9 @@ import org.springframework.core.annotation.Order;
  * AUTHORIZATION} header claimed principal
  * </ul>
  * <p>
- * otherwise {@link com.ciros.authorizer.exception.AuthorizationException
- * AuthorizationException} will be thrown
+ * otherwise an exception of type
+ * {@link com.ciros.authorizer.exception.AuthorizationException
+ * AuthorizationException} (or a subclass of it) will be thrown
  * <p>
  *
  * @author Ciro Scognamiglio
@@ -59,7 +57,6 @@ import org.springframework.core.annotation.Order;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@Order(Ordered.HIGHEST_PRECEDENCE)
 @Documented
 public @interface Authorize {
 
