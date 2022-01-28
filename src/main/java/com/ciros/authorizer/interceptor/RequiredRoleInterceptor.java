@@ -62,25 +62,22 @@ public class RequiredRoleInterceptor {
             throw new AuthorizationException(
                     "No method parameter of type String annotated with '" + REQUIRED_ANNOTATION + "' has been found");
 
-        final StringBuilder stringBuilder = new StringBuilder("Successful authorization:");
-
-        stringBuilder.append(System.lineSeparator()).append("Annotation '" + REQUIRED_ANNOTATION
-                + "' found on type String method parameter '" + parameterName + "'");
+        log.debug("Annotation '{}' found on type String method parameter '{}'", REQUIRED_ANNOTATION, parameterName);
 
         if (requiredRole.isBlank())
             throw new AuthorizationException("Required role is blank");
 
-        stringBuilder.append(System.lineSeparator()).append("Required role:\t" + requiredRole);
+        log.debug("Required role:\t{}", requiredRole);
 
         if (claimedRole == null || claimedRole.isBlank())
             throw new AuthorizationException("Claimed role is missing or blank");
 
-        stringBuilder.append(System.lineSeparator()).append("Claimed role:\t" + claimedRole);
+        log.debug("Claimed role:\t{}", claimedRole);
 
         if (!claimedRole.equals(requiredRole))
             throw new AuthorizationException("Required role <-> Claimed role mismatch");
 
-        log.info(stringBuilder.toString());
+        log.info("Successful authorization");
 
         return joinPoint.proceed();
     }

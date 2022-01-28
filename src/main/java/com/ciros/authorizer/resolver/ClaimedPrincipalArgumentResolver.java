@@ -35,21 +35,25 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
             NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
-        // TODO conditional logging
-
         final HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
 
         final String authorizationHeaderJson = request.getHeader(HttpHeaders.AUTHORIZATION);
-        AuthorizationHeader authorizationHeader;
-        final StringBuilder stringBuilder = new StringBuilder("Claimed principal resolved:");
 
-        try {
-            authorizationHeader = AuthorizerUtil.mapAuthorizationHeader(authorizationHeaderJson);
-        } catch (AuthorizationHeaderException | UnmappableAuthorizationHeaderException e) {
-            throw new ClaimedPrincipalResolverException(e.getMessage());
-        }
-        stringBuilder.append(System.lineSeparator()).append("Authorization header provided:\t")
-                .append(authorizationHeaderJson);
+        log.debug("Authorization header provided: {}", authorizationHeaderJson);
+
+        AuthorizationHeader authorizationHeader;
+
+        final AuthorizationHeader authorizationHeaderFromRequest = AuthorizerUtil
+                .getMappedAuthorizationHeaderFromRequest(request);
+
+        if (authorizationHeaderFromRequest != null)
+            authorizationHeader = authorizationHeaderFromRequest;
+        else
+            try {
+                authorizationHeader = AuthorizerUtil.mapAuthorizationHeader(authorizationHeaderJson);
+            } catch (AuthorizationHeaderException | UnmappableAuthorizationHeaderException e) {
+                throw new ClaimedPrincipalResolverException(e.getMessage());
+            }
 
         final String principalClaimed = authorizationHeader.getClaimedPrincipal();
 
@@ -59,12 +63,12 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
             throw new ClaimedPrincipalResolverException(e.getMessage());
         }
 
-        stringBuilder.append(System.lineSeparator()).append("Claimed principal:\t\t").append(principalClaimed);
+        log.info("Claimed principal: {}", principalClaimed);
 
-        log.debug(stringBuilder.toString());
+        if (authorizationHeaderFromRequest == null)
+            AuthorizerUtil.addMappedAuthorizationHeaderToRequest(request, authorizationHeader);
 
         return principalClaimed;
-
     }
 
 }

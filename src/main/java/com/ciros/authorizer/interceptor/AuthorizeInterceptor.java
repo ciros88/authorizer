@@ -2,7 +2,6 @@ package com.ciros.authorizer.interceptor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,113 +38,96 @@ public class AuthorizeInterceptor {
     @Around("@annotation(com.ciros.authorizer.annotation.Authorize)")
     public Object authorize(final ProceedingJoinPoint joinPoint) throws Throwable {
 
-        // TODO conditional logging
-
         final String authorizationHeaderJson = request.getHeader(HttpHeaders.AUTHORIZATION);
-        AuthorizationHeader authorizationHeader;
-        final StringBuilder stringBuilder = new StringBuilder("Successful authorization:");
 
-        authorizationHeader = AuthorizerUtil.mapAuthorizationHeader(authorizationHeaderJson);
-        stringBuilder.append(System.lineSeparator()).append("Authorization header provided:\t")
-                .append(authorizationHeaderJson);
+        log.debug("Authorization header provided: {}", authorizationHeaderJson);
+
+        AuthorizationHeader authorizationHeader;
+
+        final AuthorizationHeader authorizationHeaderFromRequest = AuthorizerUtil
+                .getMappedAuthorizationHeaderFromRequest(request);
+
+        if (authorizationHeaderFromRequest != null)
+            authorizationHeader = authorizationHeaderFromRequest;
+        else
+            authorizationHeader = AuthorizerUtil.mapAuthorizationHeader(authorizationHeaderJson);
 
         final MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         final Method method = methodSignature.getMethod();
 
         String requiredPrincipal = method.getAnnotation(Authorize.class).requiredPrincipal();
-        final String[] requiredAuthorities = method.getAnnotation(Authorize.class).requiredAuthorities();
 
-        if (requiredAuthorities.length == 0)
-            throw new AuthorizationException("Required authorities are missing");
-
-        boolean hasRequiredPrincipal = false;
-
-        hasRequiredPrincipal = !requiredPrincipal.isEmpty();
-
-        if (hasRequiredPrincipal && requiredPrincipal.isBlank())
-            throw new AuthorizationException("Required principal is blank");
+        final boolean hasRequiredPrincipal = !requiredPrincipal.isEmpty();
 
         String principalClaimed = "";
 
         if (hasRequiredPrincipal) {
 
+            if (requiredPrincipal.isBlank())
+                throw new AuthorizationException("Required principal is blank");
+
+            if (requiredPrincipal.startsWith("#")) {
+                log.debug("Required principal expression: {}", requiredPrincipal);
+
+                Object requiredPrincipalFromExpression;
+
+                try {
+                    requiredPrincipalFromExpression = getRequiredPrincipalFromExpression(requiredPrincipal, joinPoint,
+                            methodSignature);
+                } catch (IllegalArgumentException e) {
+                    throw new AuthorizationException("Unable to process provided expression: " + e.getMessage());
+                }
+
+                requiredPrincipal = requiredPrincipalFromExpression.toString();
+
+                if (requiredPrincipal.isBlank())
+                    throw new AuthorizationException("Required principal is blank");
+
+            }
+
+            log.debug("Required principal:\t\t{}", requiredPrincipal);
+
             principalClaimed = authorizationHeader.getClaimedPrincipal();
 
             AuthorizerUtil.validateClaimedPrincipal(principalClaimed);
 
-            stringBuilder.append(System.lineSeparator()).append("Claimed principal:\t\t").append(principalClaimed);
-        }
+            log.debug("Claimed principal:\t\t{}", principalClaimed);
 
-        final Set<String> claimedAuthorities = authorizationHeader.getClaimedAuthorities();
-
-        AuthorizerUtil.validateClaimedAuthorities(claimedAuthorities);
-
-        stringBuilder.append(System.lineSeparator()).append("Claimed authorities:\t\t").append(claimedAuthorities);
-
-        if (hasRequiredPrincipal) {
-            if (requiredPrincipal.startsWith("#")) {
-                stringBuilder.append(System.lineSeparator()).append("Required principal expression:\t")
-                        .append(requiredPrincipal);
-
-                if (requiredPrincipal.equals("#authorization.claimedprincipal"))
-                    requiredPrincipal = principalClaimed;
-                else {
-
-                    Object requiredPrincipalArg;
-
-                    try {
-                        requiredPrincipalArg = getRequiredPrincipalFromExpression(requiredPrincipal, joinPoint,
-                                methodSignature);
-                    } catch (IllegalArgumentException e) {
-                        throw new AuthorizationException("Unable to process provided expression: " + e.getMessage());
-                    }
-
-                    if (requiredPrincipalArg.toString().isBlank())
-                        throw new AuthorizationException("Required principal is blank");
-
-                    requiredPrincipal = requiredPrincipalArg.toString();
-                }
-            }
-
-            stringBuilder.append(System.lineSeparator()).append("Required principal:\t\t").append(requiredPrincipal);
         } else
-            stringBuilder.append(System.lineSeparator()).append("Required principal not provided");
+            log.debug("Required principal not provided");
+
+        final String[] requiredAuthorities = method.getAnnotation(Authorize.class).requiredAuthorities();
+
+        if (requiredAuthorities.length == 0)
+            throw new AuthorizationException("Required authorities are missing");
 
         for (String requiredAuthority : requiredAuthorities)
             if (requiredAuthority.isBlank())
                 throw new AuthorizationException("One or more required authorities are blank");
 
-        stringBuilder.append(System.lineSeparator()).append("Required authorities:\t\t")
-                .append((List.of(requiredAuthorities)));
+        log.debug("Required authorities:\t{}", (Object) requiredAuthorities);
 
-        if (hasRequiredPrincipal && !principalClaimed.equals(requiredPrincipal))
-            throw new AuthorizationException("Required principal <-> Claimed principal mismatch");
+        final Set<String> claimedAuthorities = authorizationHeader.getClaimedAuthorities();
+
+        AuthorizerUtil.validateClaimedAuthorities(claimedAuthorities);
+
+        log.debug("Claimed authorities:\t{}", claimedAuthorities);
 
         final boolean matchingAllRequiredAuthorities = method.getAnnotation(Authorize.class)
                 .matchingAllRequiredAuthorities();
 
-        stringBuilder.append(System.lineSeparator()).append("Authorities matching policy:\t")
-                .append(matchingAllRequiredAuthorities ? "match all required authorities"
-                        : "just match any of the required authorities");
+        log.debug("Authorities matching policy: {}", matchingAllRequiredAuthorities ? "match all required authorities"
+                : "just match any of the required authorities");
 
-        if (matchingAllRequiredAuthorities) {
-            for (String requiredAuthority : requiredAuthorities)
-                if (!claimedAuthorities.contains(requiredAuthority))
-                    throw new AuthorizationException("One or more required authorities not found among those claimed");
+        if (hasRequiredPrincipal && !principalClaimed.equals(requiredPrincipal))
+            throw new AuthorizationException("Required principal <-> Claimed principal mismatch");
 
-        } else {
-            boolean hasMatched = false;
-            for (String requiredAuthority : requiredAuthorities) {
-                if (claimedAuthorities.contains(requiredAuthority)) {
-                    hasMatched = true;
-                    break;
-                }
-            }
-            if (!hasMatched)
-                throw new AuthorizationException("None of the required authorities found among those claimed");
-        }
+        AuthorizerUtil.doAuthoritiesMatching(requiredAuthorities, claimedAuthorities, matchingAllRequiredAuthorities);
 
-        log.info(stringBuilder.toString());
+        log.info("Successful authorization");
+
+        if (authorizationHeaderFromRequest == null)
+            AuthorizerUtil.addMappedAuthorizationHeaderToRequest(request, authorizationHeader);
 
         return joinPoint.proceed();
     }
