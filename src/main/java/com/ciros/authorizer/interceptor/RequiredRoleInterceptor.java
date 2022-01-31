@@ -24,16 +24,30 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class RequiredRoleInterceptor {
 
-    private static final String REQUIRED_ANNOTATION_VALUE = RequiredRole.REQUIRED_HEADER;
-    private static final String REQUIRED_ANNOTATION = "@" + RequestHeader.class.getName() + "(\""
-            + REQUIRED_ANNOTATION_VALUE + "\")";
+    private static final String REQUIRED_ANNOTATION_TEMPLATE = "@" + RequestHeader.class.getName();
 
     @Around("@annotation(com.ciros.authorizer.annotation.RequiredRole)")
     public Object authorizeByRequiredRole(final ProceedingJoinPoint joinPoint) throws Throwable {
 
         final MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         final Method method = methodSignature.getMethod();
+
         final String requiredRole = method.getAnnotation(RequiredRole.class).value();
+
+        if (requiredRole.isBlank())
+            throw new AuthorizationException("Required role is blank");
+
+        log.debug("Required role: {}", requiredRole);
+
+        final String claimedRoleHeaderName = method.getAnnotation(RequiredRole.class).claimedRoleHeaderName();
+
+        if (claimedRoleHeaderName.isBlank())
+            throw new AuthorizationException("Provided claimedRoleHeaderName is blank");
+
+        log.debug("Provided claimedRoleHeaderName: {}", claimedRoleHeaderName);
+
+        final String requiredAnnotation = REQUIRED_ANNOTATION_TEMPLATE + "(\"" + claimedRoleHeaderName + "\")";
+
         String[] parameterNames = methodSignature.getParameterNames();
         final Class<?>[] parameterTypes = methodSignature.getParameterTypes();
         final Object[] args = joinPoint.getArgs();
@@ -47,7 +61,7 @@ public class RequiredRoleInterceptor {
             for (Annotation annotation : parameterAnnotations[argIndex]) {
                 if (annotation instanceof RequestHeader) {
                     RequestHeader annotationToInspect = (RequestHeader) annotation;
-                    if (annotationToInspect.value().equals(REQUIRED_ANNOTATION_VALUE)
+                    if (annotationToInspect.value().equals(claimedRoleHeaderName)
                             && parameterTypes[argIndex].equals(String.class)) {
                         claimedRole = args[argIndex].toString();
                         parameterName = parameterNames[argIndex];
@@ -60,19 +74,14 @@ public class RequiredRoleInterceptor {
 
         if (!parameterToInspectFound)
             throw new AuthorizationException(
-                    "No method parameter of type String annotated with '" + REQUIRED_ANNOTATION + "' has been found");
+                    "No method parameter of type String annotated with '" + requiredAnnotation + "' has been found");
 
-        log.debug("Annotation '{}' found on type String method parameter '{}'", REQUIRED_ANNOTATION, parameterName);
-
-        if (requiredRole.isBlank())
-            throw new AuthorizationException("Required role is blank");
-
-        log.debug("Required role:\t{}", requiredRole);
+        log.debug("Annotation '{}' found on type String method parameter '{}'", requiredAnnotation, parameterName);
 
         if (claimedRole == null || claimedRole.isBlank())
             throw new AuthorizationException("Claimed role is missing or blank");
 
-        log.debug("Claimed role:\t{}", claimedRole);
+        log.debug("Claimed role: {}", claimedRole);
 
         if (!claimedRole.equals(requiredRole))
             throw new AuthorizationException("Required role <-> Claimed role mismatch");

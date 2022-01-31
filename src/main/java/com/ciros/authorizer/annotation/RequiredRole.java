@@ -12,14 +12,19 @@ import java.lang.annotation.Target;
  * Any Spring controller method annotated with
  * {@link RequiredRole @RequiredRole} will be successfully authorized if:
  * <ul>
- * <li>{@value #REQUIRED_HEADER} header is present in the request with a
- * non-blank value representing the claimed role
+ * <li>{@link #value() value} is not blank: it represents the required role
+ * <li>{@link #claimedRoleHeaderName() claimedRoleHeaderName} (default value:
+ * "Role") is not blank too
+ * <li>an header with name {@link #claimedRoleHeaderName()
+ * claimedRoleHeaderName} is present in the request with a non-blank value
+ * representing the claimed role
  * <li>a method parameter of type {@link java.lang.String String} annotated with
  * {@link org.springframework.web.bind.annotation.RequestHeader @RequestHeader}
  * is present, where the
  * {@link org.springframework.web.bind.annotation.RequestHeader#name()
- * RequestHeader#name()} is {@value #REQUIRED_HEADER} and the parameter value is
- * not blank
+ * RequestHeader#name()} is {@link #claimedRoleHeaderName()
+ * claimedRoleHeaderName} and its argument value (obtained at runtime) is not
+ * blank: it represents the claimed role
  * <li>the claimed role matches the required role
  * </ul>
  * <p>
@@ -37,7 +42,8 @@ import java.lang.annotation.Target;
 @Documented
 public @interface RequiredRole {
 
-    static final String REQUIRED_HEADER = "Role";
-
     String value();
+
+    String claimedRoleHeaderName() default "Role";
+
 }
