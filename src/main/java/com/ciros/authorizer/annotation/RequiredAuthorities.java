@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * <h3>Authorize HTTP requests</h3>
  * <p>
  * Any Spring controller method annotated with
- * {@link RequiredRole @RequiredRole} will be successfully authorized if:
+ * {@link RequiredAuthorities @RequiredRole} will be successfully authorized if:
  * <ul>
  * <li>{@link #value() value} is not blank: it represents the required role
  * <li>{@link #claimedRoleHeaderName() claimedRoleHeaderName} (default value:
@@ -37,13 +37,11 @@ import java.lang.annotation.Target;
  *
  */
 
+/* TODO update documentation */
+
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface RequiredRole {
-
-    String value();
-
-    String claimedRoleHeaderName() default "Role";
-
+public @interface RequiredAuthorities {
+    RequiredAuthority[] value();
 }
