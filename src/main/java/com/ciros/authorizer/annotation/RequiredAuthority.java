@@ -11,34 +11,36 @@ import java.lang.annotation.Target;
  * <h3>Authorize HTTP requests</h3>
  * <p>
  * Any Spring controller method annotated with
- * {@link RequiredAuthority @RequiredRole} will be successfully authorized if:
+ * {@link RequiredAuthority @RequiredAuthority} will be successfully authorized
+ * if:
  * <ul>
- * <li>{@link #value() value} is not blank: it represents the required role
- * <li>{@link #claimedRoleHeaderName() claimedRoleHeaderName} (default value:
- * "Role") is not blank too
- * <li>an header with name {@link #claimedRoleHeaderName()
- * claimedRoleHeaderName} is present in the request with a non-blank value
- * representing the claimed role
+ * <li>{@link #value() value} is not blank: it represents the required authority
+ * <li>{@link #claimedAuthorityHeaderName() claimedAuthorityHeaderName} is not
+ * blank too
+ * <li>an header with name {@link #claimedAuthorityHeaderName()
+ * claimedAuthorityHeaderName} is present in the request with a non-blank value
+ * representing the claimed authority
  * <li>a method parameter of type {@link java.lang.String String} annotated with
  * {@link org.springframework.web.bind.annotation.RequestHeader @RequestHeader}
- * is present, where the
+ * is present, the
  * {@link org.springframework.web.bind.annotation.RequestHeader#name()
- * RequestHeader#name()} is {@link #claimedRoleHeaderName()
- * claimedRoleHeaderName} and its argument value (obtained at runtime) is not
- * blank: it represents the claimed role
- * <li>the claimed role matches the required role
+ * RequestHeader#name()} matches the {@link #claimedAuthorityHeaderName()
+ * claimedAuthorityHeaderName} value and its argument value (obtained at
+ * runtime) is not blank: it represents the claimed Authority
+ * <li>the claimed authority matches the required authority
  * </ul>
  * <p>
  * otherwise an exception of type
  * {@link com.ciros.authorizer.exception.AuthorizationException
- * AuthorizationException} (or a subclass of it) will be thrown
+ * AuthorizationException} (or a subclass of it) will be thrown.
+ * <p>
+ * {@link Repeatable @Repeatable} annotation: it can me invoked multiple times
+ * on the same method
  * <p>
  *
  * @author Ciro Scognamiglio
  *
  */
-
-/* TODO update documentation */
 
 @Repeatable(RequiredAuthorities.class)
 @Target(ElementType.METHOD)
@@ -47,11 +49,11 @@ import java.lang.annotation.Target;
 public @interface RequiredAuthority {
 
     /*
-     * TODO add a flag which mimes matchingAllRequiredAuthorities feature
+     * TODO add a flag which mime matchingAllRequiredAuthorities feature
      */
 
     String value();
 
-    String claimedAuthorityHeaderName() default "Role"; // TODO
+    String claimedAuthorityHeaderName();
 
 }

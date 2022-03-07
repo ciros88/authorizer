@@ -9,35 +9,15 @@ import java.lang.annotation.Target;
 /**
  * <h3>Authorize HTTP requests</h3>
  * <p>
- * Any Spring controller method annotated with
- * {@link RequiredAuthorities @RequiredRole} will be successfully authorized if:
- * <ul>
- * <li>{@link #value() value} is not blank: it represents the required role
- * <li>{@link #claimedRoleHeaderName() claimedRoleHeaderName} (default value:
- * "Role") is not blank too
- * <li>an header with name {@link #claimedRoleHeaderName()
- * claimedRoleHeaderName} is present in the request with a non-blank value
- * representing the claimed role
- * <li>a method parameter of type {@link java.lang.String String} annotated with
- * {@link org.springframework.web.bind.annotation.RequestHeader @RequestHeader}
- * is present, where the
- * {@link org.springframework.web.bind.annotation.RequestHeader#name()
- * RequestHeader#name()} is {@link #claimedRoleHeaderName()
- * claimedRoleHeaderName} and its argument value (obtained at runtime) is not
- * blank: it represents the claimed role
- * <li>the claimed role matches the required role
- * </ul>
- * <p>
- * otherwise an exception of type
- * {@link com.ciros.authorizer.exception.AuthorizationException
- * AuthorizationException} (or a subclass of it) will be thrown
+ * Container annotation: it allows the multiple invocation of
+ * {@link RequiredAuthority @RequiredAuthority} annotation on the same method.
+ * It can also be invoked directly on a method, however starting from Java
+ * version 8 this would be superfluous.
  * <p>
  *
  * @author Ciro Scognamiglio
  *
  */
-
-/* TODO update documentation */
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

@@ -63,7 +63,7 @@ public class ClaimedPrincipalArgumentResolver implements HandlerMethodArgumentRe
             throw new ClaimedPrincipalResolverException(e.getMessage());
         }
 
-        log.info("Claimed principal: {}", principalClaimed);
+        log.debug("Claimed principal: {}", principalClaimed);
 
         if (authorizationHeaderFromRequest == null)
             AuthorizerUtil.addMappedAuthorizationHeaderToRequest(request, authorizationHeader);

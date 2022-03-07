@@ -25,9 +25,14 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class RequiredAuthorityInterceptor {
 
-    // TODO should each interceptor be placec in its own separated class?
+    // TODO should each interceptor be placed in its own separated class file?
 
     // TODO search for more descriptive var names
+
+    /*
+     * TODO add a common validator (private method or public util?) to check against
+     * invalid values before calling the private authorizeByRequiredAuthority method
+     */
 
     private static final String REQUIRED_ANNOTATION_TEMPLATE = "@" + RequestHeader.class.getName();
 
@@ -52,17 +57,13 @@ public class RequiredAuthorityInterceptor {
     @Around("@annotation(com.ciros.authorizer.annotation.RequiredAuthorities)")
     public Object authorizeByRequiredAuthorities(final ProceedingJoinPoint joinPoint) throws Throwable {
 
-        /*
-         * TODO add a common validator (private method or public util?) to check against
-         * invalid values before calling private authorizeByRequiredAuthority method
-         */
         final MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         final Object[] args = joinPoint.getArgs();
         final Method method = methodSignature.getMethod();
-        RequiredAuthority[] RequiredAuthorityArray = method.getAnnotation(RequiredAuthorities.class).value();
-        for (int i = 0; i < RequiredAuthorityArray.length; i++) {
-            final String requiredAuthority = RequiredAuthorityArray[i].value();
-            final String claimedAuthorityHeaderName = RequiredAuthorityArray[i].claimedAuthorityHeaderName();
+        RequiredAuthority[] requiredAuthorityArray = method.getAnnotation(RequiredAuthorities.class).value();
+        for (int i = 0; i < requiredAuthorityArray.length; i++) {
+            final String requiredAuthority = requiredAuthorityArray[i].value();
+            final String claimedAuthorityHeaderName = requiredAuthorityArray[i].claimedAuthorityHeaderName();
             final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
             String[] parameterNames = methodSignature.getParameterNames();
             final Class<?>[] parameterTypes = methodSignature.getParameterTypes();
@@ -122,6 +123,6 @@ public class RequiredAuthorityInterceptor {
         if (!claimedAuthority.equals(requiredAuthority))
             throw new AuthorizationException("Required authority <-> Claimed authority mismatch");
 
-        log.info("Successful authorization");
+        log.debug("Successful authorization");
     }
 }

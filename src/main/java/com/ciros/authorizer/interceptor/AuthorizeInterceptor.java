@@ -124,7 +124,7 @@ public class AuthorizeInterceptor {
 
         AuthorizerUtil.doAuthoritiesMatching(requiredAuthorities, claimedAuthorities, matchingAllRequiredAuthorities);
 
-        log.info("Successful authorization");
+        log.debug("Successful authorization");
 
         if (authorizationHeaderFromRequest == null)
             AuthorizerUtil.addMappedAuthorizationHeaderToRequest(request, authorizationHeader);
